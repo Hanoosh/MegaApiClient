@@ -7,25 +7,29 @@ namespace CG.Web.MegaApiClient
     public const string DefaultApplicationKey = "axhQiYyQ";
     public const bool DefaultSynchronizeApiRequests = true;
 
+    public const bool DefaultUseproxy = false;
     public const int DefaultApiRequestAttempts = 60;
     public const int DefaultApiRequestDelay = 500;
     public const float DefaultApiRequestDelayExponentialFactor = 1.5f;
 
     public const int DefaultBufferSize = 1024 * 64;
     public const int DefaultChunksPackSize = 1024 * 1024;
+    public const string Defaultproxy = null;
 
 #if ASYNC
     public const long DefaultReportProgressChunkSize = DefaultBufferSize;
 #endif
 
-    public Options(
+        public Options(
       string applicationKey = DefaultApplicationKey,
       bool synchronizeApiRequests = DefaultSynchronizeApiRequests,
       int apiRequestAttempts = DefaultApiRequestAttempts,
       int apiRequestDelay = DefaultApiRequestDelay,
       float apiRequestDelayExponentialFactor = DefaultApiRequestDelayExponentialFactor,
       int bufferSize = DefaultBufferSize,
-      int chunksPackSize = DefaultChunksPackSize
+      int chunksPackSize = DefaultChunksPackSize,
+      bool Useproxy = DefaultUseproxy
+      
 #if ASYNC
       ,
       long reportProgressChunkSize = DefaultReportProgressChunkSize
@@ -41,6 +45,8 @@ namespace CG.Web.MegaApiClient
 
       this.BufferSize = bufferSize;
       this.ChunksPackSize = chunksPackSize;
+      
+      this.Useproxy = Useproxy;
 
 #if ASYNC
       if (reportProgressChunkSize < this.BufferSize)
@@ -79,9 +85,11 @@ namespace CG.Web.MegaApiClient
     /// The special value -1 merges all chunks in a single fragment and a single upload
     /// </summary>
     public int ChunksPackSize { get; internal set; }
+    public bool Useproxy { get; set; }
+     
 
 #if ASYNC
     public long ReportProgressChunkSize { get; internal set;}
 #endif
-  }
+    }
 }
