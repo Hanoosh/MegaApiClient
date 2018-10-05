@@ -1,89 +1,110 @@
-﻿#if NET40
+#if NET40
 namespace CG.Web.MegaApiClient
 {
-  using System;
-  using System.IO;
-  using System.Net;
-  using System.Reflection;
-  using System.Text;
-  using System.Threading;
+    using System;
+    using System.IO;
+    using System.Net;
+    using System.Reflection;
+    using System.Text;
+    using System.Threading;
 
-  public class WebClient : IWebClient
-  {
-    private const int DefaultResponseTimeout = Timeout.Infinite;
-
-    private readonly int responseTimeout;
-    private readonly string userAgent;
-
-    public WebClient(int responseTimeout = DefaultResponseTimeout, string userAgent = null)
+    public class WebClient : IWebClient
     {
-      this.BufferSize = Options.DefaultBufferSize;
-      this.responseTimeout = responseTimeout;
-      this.userAgent = userAgent ?? this.GenerateUserAgent();
-    }
+        private const int DefaultResponseTimeout = Timeout.Infinite;
 
-    public int BufferSize { get; set; }
+        private readonly int responseTimeout;
+        private readonly string userAgent;
+        private readonly string Proxy;
 
-    public string PostRequestJson(Uri url, string jsonData)
-    {
-      using (MemoryStream jsonStream = new MemoryStream(jsonData.ToBytes()))
-      {
-        return this.PostRequest(url, jsonStream, "application/json");
-      }
-    }
 
-    public string PostRequestRaw(Uri url, Stream dataStream)
-    {
-      return this.PostRequest(url, dataStream, "application/octet-stream");
-    }
-
-    public Stream GetRequestRaw(Uri url)
-    {
-      HttpWebRequest request = this.CreateRequest(url);
-      request.Method = "GET";
-
-      return request.GetResponse().GetResponseStream();
-    }
-
-    private string PostRequest(Uri url, Stream dataStream, string contentType)
-    {
-      HttpWebRequest request = this.CreateRequest(url);
-      request.ContentLength = dataStream.Length;
-      request.Method = "POST";
-      request.ContentType = contentType;
-
-      using (Stream requestStream = request.GetRequestStream())
-      {
-        dataStream.Position = 0;
-        dataStream.CopyTo(requestStream, this.BufferSize);
-      }
-
-      using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-      {
-        using (Stream responseStream = response.GetResponseStream())
+        public WebClient(string Defaultproxy = null, int responseTimeout = DefaultResponseTimeout, string userAgent = null)
         {
-          using (StreamReader streamReader = new StreamReader(responseStream, Encoding.UTF8))
-          {
-            return streamReader.ReadToEnd();
-          }
+            this.Proxy = Defaultproxy;
+            this.BufferSize = Options.DefaultBufferSize;
+            this.responseTimeout = responseTimeout;
+            this.userAgent = userAgent ?? this.GenerateUserAgent();
         }
-      }
-    }
 
-    private HttpWebRequest CreateRequest(Uri url)
-    {
-      HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-      request.Timeout = this.responseTimeout;
-      request.UserAgent = this.userAgent;
+        public int BufferSize { get; set; }
 
-      return request;
-    }
 
-    private string GenerateUserAgent()
-    {
-      AssemblyName assemblyName = Assembly.GetExecutingAssembly().GetName();
-      return string.Format("{0} v{1}", assemblyName.Name, assemblyName.Version.ToString(2));
+        public string PostRequestJson(Uri url, string jsonData)
+        {
+            using (MemoryStream jsonStream = new MemoryStream(jsonData.ToBytes()))
+            {
+                return this.PostRequest(url, jsonStream, "application/json");
+            }
+        }
+
+        public string PostRequestRaw(Uri url, Stream dataStream)
+        {
+            return this.PostRequest(url, dataStream, "application/octet-stream");
+        }
+
+        public Stream GetRequestRaw(Uri url)
+        {
+            HttpWebRequest request = this.CreateRequest(url);
+            request.Method = "GET";
+
+            return request.GetResponse().GetResponseStream();
+        }
+
+        private string PostRequest(Uri url, Stream dataStream, string contentType)
+        {
+            HttpWebRequest request = this.CreateRequest(url);
+            request.ContentLength = dataStream.Length;
+            request.Method = "POST";
+            request.ContentType = contentType;
+
+            using (Stream requestStream = request.GetRequestStream())
+            {
+                dataStream.Position = 0;
+                dataStream.CopyTo(requestStream, this.BufferSize);
+            }
+
+            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+            {
+                using (Stream responseStream = response.GetResponseStream())
+                {
+                    using (StreamReader streamReader = new StreamReader(responseStream, Encoding.UTF8))
+                    {
+                        return streamReader.ReadToEnd();
+                    }
+                }
+            }
+        }
+
+        private HttpWebRequest CreateRequest(Uri url)
+        {
+            // The "if" is not working for both 
+            // if (Options.Defaultproxy != null) OR if (!Options.DefaultUseproxy)
+            // {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.Timeout = this.responseTimeout;
+            request.UserAgent = this.userAgent;
+
+            request.Proxy = new WebProxy(this.Proxy, true);
+            return request;
+            // }
+            // else
+            // {
+            //   HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            //    request.Timeout = this.responseTimeout;
+            //    request.UserAgent = this.userAgent;
+
+
+            //   return request;
+            // }
+
+
+        }
+
+        private string GenerateUserAgent()
+        {
+
+            AssemblyName assemblyName = Assembly.GetExecutingAssembly().GetName();
+            return string.Format("{0} v{1}", assemblyName.Name, assemblyName.Version.ToString(2));
+        }
     }
-  }
 }
 #endif
